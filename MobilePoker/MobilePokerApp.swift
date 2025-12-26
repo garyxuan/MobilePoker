@@ -9,9 +9,18 @@ import SwiftUI
 
 @main
 struct MobilePokerApp: App {
+    @StateObject private var multipeerManager = MultipeerManager()
+    @StateObject private var gameStore: GameStore
+    
+    init() {
+        let manager = MultipeerManager()
+        _multipeerManager = StateObject(wrappedValue: manager)
+        _gameStore = StateObject(wrappedValue: GameStore(multipeerManager: manager))
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView(store: gameStore)
         }
     }
 }
