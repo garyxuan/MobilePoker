@@ -17,35 +17,23 @@ struct HandView: View {
                 // 桌面视图（顶部）
                 if let state = store.gameState {
                     TableView(stacks: state.table, players: state.players)
-                        .frame(height: geometry.size.height * 0.42)
+                        .frame(height: geometry.size.height * 0.55)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // 点击桌面区域清空选择
+                            if !selectedCardIDs.isEmpty {
+                                withAnimation {
+                                    selectedCardIDs.removeAll()
+                                }
+                                HapticFeedback.light()
+                            }
+                        }
                 }
                 
                 Divider()
                 
-                // 手牌视图（底部）
+                // 手牌区域（底部，占约 45%）
                 VStack(spacing: 0) {
-                    // 标题栏
-                    HStack {
-                        Image(systemName: "hand.raised.fill")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        Text("我的手牌")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        if !selectedCardIDs.isEmpty {
-                            Text("已选择 \(selectedCardIDs.count) 张")
-                                .font(.subheadline)
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 12)
-                    
-                    Divider()
-                    
                     // 手牌滚动区域
                     if store.myHand.isEmpty {
                         // 空状态
@@ -59,110 +47,53 @@ struct HandView: View {
                                 .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding()
                     } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(store.myHand) { card in
-                                    CardView(card: card, isSelected: selectedCardIDs.contains(card.id))
-                                        .onTapGesture {
-                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                                if selectedCardIDs.contains(card.id) {
-                                                    selectedCardIDs.remove(card.id)
-                                                    HapticFeedback.selection()
-                                                } else {
-                                                    selectedCardIDs.insert(card.id)
-                                                    HapticFeedback.light()
-                                                }
-                                            }
-                                        }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
-                        }
-                    }
-                    
-                    // 操作按钮区域
-                    if !selectedCardIDs.isEmpty {
-                        VStack(spacing: 12) {
-                            Divider()
-                            
-                            HStack(spacing: 12) {
-                                // 取消选择按钮
-                                Button(action: {
-                                    withAnimation {
-                                        selectedCardIDs.removeAll()
-                                    }
-                                    HapticFeedback.light()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "xmark.circle")
-                                        Text("取消")
-                                    }
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Color(.secondarySystemBackground))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                }
-                                
-                                // 出牌按钮
-                                Button(action: {
+                        HandCarouselView(
+                            cards: store.myHand,
+                            selectedCardIDs: $selectedCardIDs,
+                            onCardTapped: { cardID in
+                                if cardID == "__PLAY__" {
+                                    // 上滑出牌
                                     store.playCards(Array(selectedCardIDs))
-                                    withAnimation {
+                                    withAnimation(.easeOut(duration: 0.12)) {
                                         selectedCardIDs.removeAll()
                                     }
                                     HapticFeedback.medium()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "arrow.up.circle.fill")
-                                        Text("出牌 (\(selectedCardIDs.count) 张)")
+                                } else {
+                                    // 切换选中状态
+                                    withAnimation(.easeOut(duration: 0.15)) {
+                                        if selectedCardIDs.contains(cardID) {
+                                            selectedCardIDs.remove(cardID)
+                                            HapticFeedback.selection()
+                                        } else {
+                                            selectedCardIDs.insert(cardID)
+                                            HapticFeedback.light()
+                                        }
                                     }
-                                    .font(.body)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Color.accentColor)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                             }
-                            .padding(.horizontal)
-                            .padding(.bottom, 8)
-                        }
-                        .background(Color(.systemBackground))
+                        )
+                        .frame(height: geometry.size.height * 0.45)
                     }
+                    
+                    // 提示条
+                    VStack(spacing: 0) {
+                        HandHintBar(selectedCount: selectedCardIDs.count)
+                            .padding(.bottom, 12)
+                            .padding(.top, 8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemBackground))
                 }
-                .frame(height: geometry.size.height * 0.58)
+                .frame(height: geometry.size.height * 0.45)
                 .background(Color(.systemBackground))
             }
         }
         .background(Color(.systemGroupedBackground))
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onEnded { value in
-                    if value.translation.height < -50 {
-                        // 上滑出牌
-                        if !selectedCardIDs.isEmpty {
-                            store.playCards(Array(selectedCardIDs))
-                            withAnimation {
-                                selectedCardIDs.removeAll()
-                            }
-                            HapticFeedback.success()
-                        }
-                    } else if value.translation.height > 50 {
-                        // 下滑取消选择
-                        if !selectedCardIDs.isEmpty {
-                            withAnimation {
-                                selectedCardIDs.removeAll()
-                            }
-                            HapticFeedback.light()
-                        }
-                    }
-                }
-        )
+        .onChange(of: store.myHand) { _,newHand in
+            // 当手牌更新时，清理不存在的 selection
+            let newHandIDs = Set(newHand.map { $0.id })
+            selectedCardIDs = selectedCardIDs.filter { newHandIDs.contains($0) }
+        }
     }
 }
-
