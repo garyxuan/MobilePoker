@@ -105,7 +105,7 @@ struct HandView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                                     .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(10, style: .continuous)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                                 
                                 // 出牌按钮
@@ -126,7 +126,7 @@ struct HandView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                                     .background(Color.accentColor)
-                                    .cornerRadius(10, style: .continuous)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                             }
                             .padding(.horizontal)

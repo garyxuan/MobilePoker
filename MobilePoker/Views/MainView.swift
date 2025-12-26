@@ -14,10 +14,13 @@ struct MainView: View {
         Group {
             if let state = store.gameState, state.phase == .playing {
                 HandView(store: store)
+                    .transition(.move(edge: .bottom))
             } else {
                 LobbyView(store: store)
+                    .transition(.move(edge: .top))
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: store.gameState?.phase)
     }
 }
 

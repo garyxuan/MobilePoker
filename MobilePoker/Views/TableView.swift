@@ -66,7 +66,7 @@ struct TableView: View {
                             }
                             .padding()
                             .background(Color(.secondarySystemBackground))
-                            .cornerRadius(12, style: .continuous)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .padding(.horizontal)
                         }
                     }

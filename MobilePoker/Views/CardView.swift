@@ -46,9 +46,12 @@ struct CardView: View {
 }
 
 #Preview {
-    HStack {
+    HStack(spacing: 20) {
         CardView(card: Card(suit: .spades, rank: .ace), isSelected: false)
         CardView(card: Card(suit: .hearts, rank: .king), isSelected: true)
+        CardView(card: Card(suit: .diamonds, rank: .queen), isSelected: false)
     }
+    .padding()
+    .background(Color(.systemGroupedBackground))
 }
 
